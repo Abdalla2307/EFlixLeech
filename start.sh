@@ -6,4 +6,4 @@ cd "$ROOT_DIR"
 export PYTHONPATH="$ROOT_DIR${PYTHONPATH:+:$PYTHONPATH}"
 
 python3 update.py
-exec python3 "$ROOT_DIR/bot/__main__.py"
+exec python3 -m bot
