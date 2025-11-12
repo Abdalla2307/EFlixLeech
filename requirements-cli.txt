@@ -4,5 +4,6 @@ progress
 progressbar2
 httplib2shim
 google_auth_oauthlib
+psycopg2-binary
 pyrogram==2.0.77
 tgcrypto
