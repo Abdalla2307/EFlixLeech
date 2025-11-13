@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
+import sys
 import tempfile
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
@@ -995,17 +996,20 @@ async def auto_process_video(client: Client, message: Message):
 
 
 def _register_alias_functions() -> None:
+    module = sys.modules.get(__name__)
+    if module is None:
+        return
     for base, trigger in COMMAND_TRIGGER_MAP.items():
         if not trigger or trigger == base:
             continue
-        if not trigger.isidentifier():
-            continue
         base_attr = f"{base}_command"
         alias_attr = f"{trigger}_command"
-        base_func = globals().get(base_attr)
-        if base_func is None or alias_attr in globals():
+        if hasattr(module, alias_attr):
             continue
-        globals()[alias_attr] = base_func
+        base_func = getattr(module, base_attr, None)
+        if base_func is None:
+            continue
+        setattr(module, alias_attr, base_func)
 
 
 _register_alias_functions()
