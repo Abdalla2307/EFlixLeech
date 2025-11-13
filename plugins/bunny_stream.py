@@ -71,15 +71,51 @@ MAX_PARALLEL_IMPORTS = max(1, _to_int(Config.BUNNY_MAX_PARALLEL_IMPORTS, 4))
 WAIT_TIMEOUT_S = _to_int(Config.BUNNY_WAIT_TIMEOUT_S, 7200)
 WAIT_INTERVAL_S = _to_int(Config.BUNNY_WAIT_INTERVAL_S, 30)
 ALLOWED_RES = _normalize_resolutions(Config.BUNNY_ALLOWED_RES, [360, 480, 720, 1080])
-COMMAND_PREFIX = (Config.BUNNY_COMMAND_PREFIX or "bunny").strip()
+COMMAND_PREFIX = (Config.BUNNY_COMMAND_PREFIX or "").strip()
+COMMAND_ALIASES_RAW = Config.BUNNY_COMMAND_ALIASES or "c:coo,l:li"
 DEFAULT_AUTO_STATE = bool(Config.BUNNY_AUTO_PROCESS_ENABLED)
 BUNNY_DATABASE_URL = (Config.BUNNY_DATABASE_URL or "").strip()
 
 _import_semaphore = asyncio.Semaphore(MAX_PARALLEL_IMPORTS)
 
 
+def _parse_alias_map(value: Any) -> Dict[str, str]:
+    mapping: Dict[str, str] = {}
+    if isinstance(value, dict):
+        for key, alias in value.items():
+            if key and alias:
+                mapping[str(key).strip()] = str(alias).strip()
+        return mapping
+    if isinstance(value, str):
+        for part in value.split(","):
+            part = part.strip()
+            if not part or ":" not in part:
+                continue
+            base, alias = part.split(":", 1)
+            base = base.strip()
+            alias = alias.strip()
+            if base and alias:
+                mapping[base] = alias
+    return mapping
+
+
+COMMAND_ALIASES = _parse_alias_map(COMMAND_ALIASES_RAW)
+
+
 def _command_name(base: str) -> str:
+    base = base.strip()
+    if base in COMMAND_ALIASES:
+        return COMMAND_ALIASES[base]
     return f"{COMMAND_PREFIX}{base}" if COMMAND_PREFIX else base
+
+
+def _base_from_invoked(invoked: str) -> str:
+    for base, alias in COMMAND_ALIASES.items():
+        if alias == invoked:
+            return base
+    if COMMAND_PREFIX and invoked.startswith(COMMAND_PREFIX):
+        return invoked[len(COMMAND_PREFIX) :]
+    return invoked
 
 
 COMMAND_BASES = [
@@ -501,9 +537,7 @@ def _extract_command_args(message: Message) -> Tuple[str, List[str]]:
     parts = message.command or []
     if not parts:
         return "", []
-    invoked = parts[0]
-    if COMMAND_PREFIX and invoked.startswith(COMMAND_PREFIX):
-        invoked = invoked[len(COMMAND_PREFIX) :]
+    invoked = _base_from_invoked(parts[0])
     return invoked, parts[1:]
 
 
