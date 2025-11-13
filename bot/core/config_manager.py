@@ -118,6 +118,17 @@ class Config:
     YT_TAGS = ["telegram", "bot", "youtube"]
     YT_CATEGORY_ID = 22
     YT_PRIVACY_STATUS = "unlisted"
+    BUNNY_LIBRARY_ID = 0
+    BUNNY_API_KEY = ""
+    BUNNY_CDN_HOST = ""
+    BUNNY_WAIT_TIMEOUT_S = 7200
+    BUNNY_WAIT_INTERVAL_S = 30
+    BUNNY_ALLOWED_RES = [360, 480, 720, 1080]
+    BUNNY_MAX_PARALLEL_IMPORTS = 60
+    BUNNY_COMMAND_PREFIX = ""
+    BUNNY_COMMAND_ALIASES = "c:coo,l:li"
+    BUNNY_AUTO_PROCESS_ENABLED = True
+    BUNNY_DATABASE_URL = ""
 
     @classmethod
     def get(cls, key):
